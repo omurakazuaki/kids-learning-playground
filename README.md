@@ -1,31 +1,30 @@
 # kids-learning-playground
 
-Slidev presentation workspace.
+子ども向け学習プラットフォーム。算数・国語・英語・推論問題などの学習コンテンツを、LLM が Slidev スライドとして自動生成します。
 
-This project is configured to use `pnpm`.
-`npm` is not recommended for Slidev project setup.
+## セットアップ
 
-## Setup
-
-1. Install dependencies.
+1. 依存パッケージのインストール
 
    ```bash
    pnpm install
    ```
 
-2. Start Slidev dev server.
+2. 開発サーバーの起動
 
    ```bash
    pnpm dev
    ```
 
-## Available Scripts
+## スクリプト
 
-- `pnpm dev`: Start local Slidev server.
-- `pnpm build`: Build static site.
-- `pnpm export`: Export slides to PDF.
-- `pnpm preview`: Start remote mode for sharing.
+| コマンド | 説明 |
+|---|---|
+| `pnpm dev` | ローカル開発サーバーを起動 |
+| `pnpm build` | 静的サイトをビルド |
+| `pnpm export` | スライドを PDF に書き出し |
+| `pnpm preview` | リモート共有モードで起動 |
 
-## Slides
+## コンテンツ
 
-Edit `slides.md` to create your presentation.
+学習コンテンツはすべて `slides.md` に格納されています。現在は日本語で生成しており、将来的には多言語対応を予定しています。
