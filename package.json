@@ -10,6 +10,7 @@
   },
   "devDependencies": {
     "@oxc-parser/binding-linux-x64-gnu": "^0.126.0",
-    "@slidev/cli": "latest"
+    "@slidev/cli": "latest",
+    "@slidev/theme-default": "^0.25.0"
   }
 }
