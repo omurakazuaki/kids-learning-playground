@@ -1,0 +1,15 @@
+{
+  "name": "kids-learning-playground",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "slidev",
+    "build": "slidev build",
+    "export": "slidev export",
+    "preview": "slidev --remote"
+  },
+  "devDependencies": {
+    "@oxc-parser/binding-linux-x64-gnu": "^0.126.0",
+    "@slidev/cli": "latest"
+  }
+}
