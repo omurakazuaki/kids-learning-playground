@@ -53,42 +53,51 @@ for (const { age, category, name, file } of slides) {
   });
 }
 
-// Group by age → category
+// Group by age (flat — category shown via card color)
 const grouped = {};
 for (const { age, category, name, title } of slides) {
-  (grouped[age] ??= {})[category] ??= [];
-  grouped[age][category].push({ name, title, href: `/${REPO_NAME}/${age}/${category}/${name}/` });
+  (grouped[age] ??= []).push({
+    category,
+    name,
+    title,
+    href: `/${REPO_NAME}/${age}/${category}/${name}/`,
+  });
 }
 
 const CATEGORY_META = {
-  math:      { label: '算数',  icon: '🔢', color: '#FF6B6B', bg: '#fff0f0' },
-  japanese:  { label: '国語',  icon: '📖', color: '#4ECDC4', bg: '#f0fffe' },
-  english:   { label: '英語',  icon: '🌍', color: '#45B7D1', bg: '#f0f8ff' },
-  reasoning: { label: '推論',  icon: '🧩', color: '#96CEB4', bg: '#f0fff4' },
+  math:      { label: '算数',  icon: '🔢', color: '#FF6B6B' },
+  japanese:  { label: '国語',  icon: '📖', color: '#4ECDC4' },
+  english:   { label: '英語',  icon: '🌍', color: '#45B7D1' },
+  reasoning: { label: '推論',  icon: '🧩', color: '#96CEB4' },
 };
+const FALLBACK_META = { label: 'その他', icon: '📚', color: '#888' };
 
-function categoryCard(cat, items) {
-  const { label, icon, color, bg } = CATEGORY_META[cat] ?? { label: cat, icon: '📚', color: '#888', bg: '#f8f8f8' };
-  const links = items.map(({ title, href }) =>
-    `<a href="${href}" class="slide-link" style="background:${color}">${title}</a>`
-  ).join('');
-  return `
-    <div class="category-card" style="border-color:${color};background:${bg}">
-      <h3 style="color:${color}">${icon} ${label}</h3>
-      <div class="links">${links}</div>
-    </div>`;
+function metaOf(cat) {
+  return CATEGORY_META[cat] ?? FALLBACK_META;
 }
 
-function ageSection(age, categories) {
-  const cards = Object.entries(categories).map(([cat, items]) => categoryCard(cat, items)).join('');
+function slideCard({ category, title, href }) {
+  const { label, icon, color } = metaOf(category);
+  return `<a href="${href}" class="slide-card" style="background:${color}" aria-label="${label}: ${title}">
+      <span class="slide-icon" aria-hidden="true">${icon}</span>
+      <span class="slide-title">${title}</span>
+    </a>`;
+}
+
+function ageSection(age, items) {
+  const cards = items.map(slideCard).join('');
   return `
   <section class="age-section">
     <h2>🎒 <span class="age-label">${age}さい 向け</span></h2>
-    <div class="categories">${cards}</div>
+    <div class="slide-grid">${cards}</div>
   </section>`;
 }
 
-const sections = Object.entries(grouped).map(([age, cats]) => ageSection(age, cats)).join('');
+const legend = Object.entries(CATEGORY_META).map(([, { label, icon, color }]) =>
+  `<span class="legend-item"><span class="legend-swatch" style="background:${color}"></span>${icon} ${label}</span>`
+).join('');
+
+const sections = Object.entries(grouped).map(([age, items]) => ageSection(age, items)).join('');
 
 const html = `<!DOCTYPE html>
 <html lang="ja">
@@ -113,6 +122,28 @@ const html = `<!DOCTYPE html>
       letter-spacing: 0.05em;
     }
     .container { max-width: 960px; margin: 0 auto; }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.75rem 1.25rem;
+      margin-bottom: 2rem;
+      padding: 0.75rem 1rem;
+      background: rgba(255,255,255,0.92);
+      border-radius: 999px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #444;
+    }
+    .legend-item { display: inline-flex; align-items: center; gap: 0.4rem; }
+    .legend-swatch {
+      width: 0.9rem;
+      height: 0.9rem;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
+    }
     .age-section {
       background: #fff;
       border-radius: 20px;
@@ -128,42 +159,38 @@ const html = `<!DOCTYPE html>
       border-bottom: 3px solid #eee;
     }
     .age-label { font-size: 1.4rem; }
-    .categories {
+    .slide-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1rem;
+      gap: 0.85rem;
     }
-    .category-card {
-      border: 2px solid;
-      border-radius: 14px;
-      padding: 1rem;
-    }
-    .category-card h3 {
-      font-size: 1.05rem;
-      margin-bottom: 0.75rem;
-    }
-    .links { display: flex; flex-direction: column; gap: 0.5rem; }
-    .slide-link {
-      display: block;
+    .slide-card {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
       color: #fff;
       text-decoration: none;
-      padding: 0.6rem 0.9rem;
-      border-radius: 9px;
-      font-size: 0.9rem;
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+      font-size: 0.95rem;
       font-weight: 700;
       line-height: 1.3;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+      min-height: 64px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.18);
       transition: transform 0.12s, box-shadow 0.12s;
     }
-    .slide-link:hover {
+    .slide-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 5px 14px rgba(0,0,0,0.28);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.28);
     }
+    .slide-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .slide-title { flex: 1; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>🎓 Kids Learning Playground</h1>
+    <div class="legend" aria-label="カテゴリ凡例">${legend}</div>
     ${sections}
   </div>
 </body>
