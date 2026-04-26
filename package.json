@@ -6,7 +6,8 @@
     "dev": "slidev",
     "build": "slidev build",
     "export": "slidev export",
-    "preview": "slidev --remote"
+    "preview": "slidev --remote",
+    "lint": "node scripts/lint-slides.mjs"
   },
   "devDependencies": {
     "@oxc-parser/binding-linux-x64-gnu": "^0.126.0",

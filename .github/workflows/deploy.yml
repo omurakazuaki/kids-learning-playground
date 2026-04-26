@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Lint slides
+        run: pnpm lint
+
       - name: Build all slides and generate index
         run: node scripts/build-all.mjs
 

@@ -131,5 +131,5 @@ A：300 − 240 ＝ <b>60えん</b> ⭐　／　C：300 − 260 ＝ 40えん
 <div style="background:#e0f7fa; border-radius:10px; padding:0.35em 0.8em; margin-top:0.3em; font-size:0.9rem; line-height:1.5;">
 
 💡 きょうの まとめ：<b>くりかえし たし算 → 合計 → くらべる → のこり</b><br>
-4つ の <ruby>力<rt>ちから</rt</ruby>を ぜんぶ つかえる ようになった ね！🏆
+4つ の <ruby>力<rt>ちから</rt></ruby> を ぜんぶ つかえる ようになった ね！🏆
 </div>
