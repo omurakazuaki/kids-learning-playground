@@ -47,9 +47,9 @@ mdc: true
 
 # 📖 ② <ruby>最終<rt>さいしゅう</rt></ruby> よこくじょう
 
-<div style="background:#eceff1; padding:0.7em 1em; border-radius:16px; margin-top:0.4em; font-size:1.0rem; line-height:1.95; font-family: serif;">
+<div style="background:#eceff1; padding:0.7em 1em; border-radius:16px; margin-top:0.4em; font-size:1.0rem; line-height:1.95; font-family: serif; font-style: italic;">
 
-🐈‍⬛ <i>「ニャンタンてい へ。<br><br>
+🐈‍⬛ 「ニャンタンてい へ。<br><br>
 
 　あした、**(3 + 2) − 1 じ** に、<br>
 　ねこやま<ruby>広場<rt>ひろば</rt></ruby> から<br>
@@ -58,7 +58,7 @@ mdc: true
 　大切な もの を いただこう。<br><br>
 
 　こんど は つかまら ぬ ぞ！<br>
-　　— かいとう クロネコ より」</i>
+　　— かいとう クロネコ より」
 
 </div>
 

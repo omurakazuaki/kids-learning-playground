@@ -139,6 +139,7 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 .claude/skills/*-workspace
+.claude/scheduled_tasks.lock
 
 # Slidev dev server cache
 docs/**/index.html

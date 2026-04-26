@@ -48,9 +48,9 @@ mdc: true
 
 # 📖 ② <ruby>怪盗<rt>かいとう</rt></ruby> の よこくじょう
 
-<div style="background:#eceff1; padding:0.8em 1em; border-radius:16px; margin-top:0.4em; font-size:1.05rem; line-height:1.95; font-family: serif;">
+<div style="background:#eceff1; padding:0.8em 1em; border-radius:16px; margin-top:0.4em; font-size:1.05rem; line-height:1.95; font-family: serif; font-style: italic;">
 
-🐈‍⬛ <i>「ニャンタンてい へ。<br><br>
+🐈‍⬛ 「ニャンタンてい へ。<br><br>
 
 　あした、ねこやま<ruby>商店街<rt>しょうてんがい</rt></ruby> の<br>
 　**(8 − 5) ばんめ の おみせ** に、<br>
@@ -58,7 +58,7 @@ mdc: true
 　そして **(10 − 6) つ** の <ruby>大切<rt>たいせつ</rt></ruby>な もの を いただこう。<br><br>
 
 　とめられる もの なら、とめて みろ！<br>
-　　　— かいとう クロネコ より」</i>
+　　　— かいとう クロネコ より」
 
 </div>
 

@@ -108,11 +108,54 @@ function checkFrontmatter(text, file) {
   }
 }
 
+// インライン HTML 要素はブランク行をまたいで開閉できない。
+// Markdown はブランク行で段落を区切るので、開きタグ側の段落で閉じタグが見つからず
+// Vue compiler が "Element is missing end tag" を出す。
+const INLINE_TAGS = [
+  'i', 'em', 'b', 'strong', 'u', 's', 'small', 'sub', 'sup',
+  'mark', 'q', 'cite', 'a', 'code', 'ruby', 'rt', 'rp', 'span',
+];
+
+function checkInlineSpansBlankLine(text, file) {
+  const lines = text.split('\n');
+  for (const tag of INLINE_TAGS) {
+    const re = new RegExp(`<(/?)${tag}(?=[\\s/>])`, 'gi');
+    const tokens = [];
+    lines.forEach((line, i) => {
+      let m;
+      while ((m = re.exec(line)) !== null) {
+        tokens.push({ kind: m[1] === '/' ? 'close' : 'open', line: i });
+      }
+    });
+    const stack = [];
+    for (const t of tokens) {
+      if (t.kind === 'open') {
+        stack.push(t);
+      } else {
+        const op = stack.pop();
+        if (!op || op.line === t.line) continue;
+        for (let i = op.line + 1; i < t.line; i++) {
+          if (lines[i].trim() === '') {
+            record(
+              errors,
+              file,
+              op.line + 1,
+              `<${tag}> がブランク行をまたいで </${tag}> につながっています（Markdown の段落分割で Vue が end tag 不在と判断）`
+            );
+            break;
+          }
+        }
+      }
+    }
+  }
+}
+
 function checkFile(file) {
   const text = readFileSync(file, 'utf-8');
   checkFrontmatter(text, file);
   checkTagWellFormedness(text, file);
   checkRubyStructure(text, file);
+  checkInlineSpansBlankLine(text, file);
   for (const tag of ['ruby', 'rt', 'div', 'span']) {
     checkTagBalance(text, file, tag);
   }
