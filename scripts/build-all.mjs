@@ -1,5 +1,6 @@
-import { execSync } from 'child_process';
-import { readdirSync, mkdirSync, writeFileSync, statSync, readFileSync } from 'fs';
+import { spawn } from 'child_process';
+import { createHash } from 'crypto';
+import { readdirSync, mkdirSync, writeFileSync, statSync, readFileSync, existsSync } from 'fs';
 import { join, basename, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -8,6 +9,37 @@ const ROOT = join(__dirname, '..');
 const DOCS_DIR = join(ROOT, 'docs');
 const DIST_DIR = join(ROOT, 'dist');
 const REPO_NAME = 'kids-learning-playground';
+
+// 環境変数で挙動を切り替え可能。
+//   BUILD_CONCURRENCY: 並列ビルド数 (default 2)
+//   BUILD_FORCE=1:     ハッシュキャッシュを無視して全件リビルド
+const CONCURRENCY = Math.max(1, Number(process.env.BUILD_CONCURRENCY) || 2);
+const FORCE = process.env.BUILD_FORCE === '1';
+
+// このスクリプト自体や依存が変わったら全件再ビルドさせるための種。
+// ビルド出力を変えるロジックを書き換えたら手動でインクリメントする。
+const BUILD_VERSION = 1;
+
+function buildInputsHash() {
+  const lockPath = join(ROOT, 'pnpm-lock.yaml');
+  const lock = existsSync(lockPath) ? readFileSync(lockPath, 'utf-8') : '';
+  return createHash('sha256')
+    .update(`v${BUILD_VERSION}|`)
+    .update(lock)
+    .digest('hex')
+    .slice(0, 16);
+}
+
+const INPUTS_HASH = buildInputsHash();
+
+function deckHash(filePath) {
+  const content = readFileSync(filePath, 'utf-8');
+  return createHash('sha256')
+    .update(INPUTS_HASH).update('|')
+    .update(content)
+    .digest('hex')
+    .slice(0, 16);
+}
 
 function extractTitle(filePath) {
   const content = readFileSync(filePath, 'utf-8');
@@ -39,18 +71,86 @@ function findSlides(dir) {
   return slides;
 }
 
+function hashFilePath(slide) {
+  return join(DIST_DIR, slide.age, slide.category, slide.name, '.build-hash');
+}
+
+function isCached(slide, hash) {
+  if (FORCE) return false;
+  const hp = hashFilePath(slide);
+  if (!existsSync(hp)) return false;
+  return readFileSync(hp, 'utf-8').trim() === hash;
+}
+
+function runSlidev(slide) {
+  const outDir = join(DIST_DIR, slide.age, slide.category, slide.name);
+  const base = `/${REPO_NAME}/${slide.age}/${slide.category}/${slide.name}/`;
+  mkdirSync(outDir, { recursive: true });
+  return new Promise((resolve, reject) => {
+    const args = ['exec', 'slidev', 'build', slide.file, '--out', outDir, '--base', base];
+    const child = spawn('pnpm', args, {
+      cwd: ROOT,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: process.env,
+    });
+    let buf = '';
+    child.stdout.on('data', d => { buf += d; });
+    child.stderr.on('data', d => { buf += d; });
+    child.on('error', reject);
+    child.on('close', code => {
+      if (code === 0) resolve(buf);
+      else reject(Object.assign(new Error(`slidev build exited with ${code}`), { output: buf }));
+    });
+  });
+}
+
+async function buildPool(items, concurrency) {
+  const queue = items.slice();
+  const total = queue.length;
+  let done = 0;
+  let failed = 0;
+  const errors = [];
+  async function worker() {
+    while (queue.length > 0) {
+      const job = queue.shift();
+      if (!job) return;
+      const idx = ++done;
+      const start = Date.now();
+      const label = `${job.age}/${job.category}/${job.name}`;
+      console.log(`[${idx}/${total}] → ${label}`);
+      try {
+        await runSlidev(job);
+        const sec = ((Date.now() - start) / 1000).toFixed(1);
+        writeFileSync(hashFilePath(job), job._hash, 'utf-8');
+        console.log(`[${idx}/${total}] ✓ ${label} (${sec}s)`);
+      } catch (e) {
+        failed++;
+        const sec = ((Date.now() - start) / 1000).toFixed(1);
+        console.error(`[${idx}/${total}] ✗ ${label} (${sec}s)`);
+        if (e.output) console.error(e.output);
+        errors.push({ slide: job, error: e });
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, total) }, worker));
+  return { failed, errors };
+}
+
 const slides = findSlides(DOCS_DIR);
 console.log(`Found ${slides.length} slides`);
 
-for (const { age, category, name, file } of slides) {
-  const outDir = join(DIST_DIR, age, category, name);
-  const base = `/${REPO_NAME}/${age}/${category}/${name}/`;
-  console.log(`\nBuilding: ${file}`);
-  mkdirSync(outDir, { recursive: true });
-  execSync(`pnpm exec slidev build "${file}" --out "${outDir}" --base "${base}"`, {
-    stdio: 'inherit',
-    cwd: ROOT,
-  });
+for (const s of slides) s._hash = deckHash(s.file);
+const toBuild = slides.filter(s => !isCached(s, s._hash));
+const cached = slides.length - toBuild.length;
+
+console.log(`Cached: ${cached} / To build: ${toBuild.length} (concurrency=${CONCURRENCY}${FORCE ? ', force' : ''})`);
+
+if (toBuild.length > 0) {
+  const { failed } = await buildPool(toBuild, CONCURRENCY);
+  if (failed > 0) {
+    console.error(`\n${failed} build(s) failed.`);
+    process.exit(1);
+  }
 }
 
 // Group by age (flat — category shown via card color)

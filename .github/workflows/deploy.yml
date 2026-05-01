@@ -35,7 +35,18 @@ jobs:
       - name: Lint slides
         run: pnpm lint
 
+      - name: Restore build cache
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: slidev-dist-${{ hashFiles('pnpm-lock.yaml', 'scripts/build-all.mjs') }}-${{ github.run_id }}
+          restore-keys: |
+            slidev-dist-${{ hashFiles('pnpm-lock.yaml', 'scripts/build-all.mjs') }}-
+            slidev-dist-
+
       - name: Build all slides and generate index
+        env:
+          BUILD_CONCURRENCY: "2"
         run: node scripts/build-all.mjs
 
       - uses: actions/upload-pages-artifact@v3
